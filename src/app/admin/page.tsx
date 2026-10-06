@@ -1,430 +1,414 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Save, Loader2, CheckCircle2, ZoomIn, ZoomOut, Move } from 'lucide-react';
+import {
+  Save, Loader2, CheckCircle2, ZoomIn, ZoomOut,
+  Move, Plus, Pencil, ExternalLink, Users, X, ChevronLeft
+} from 'lucide-react';
 
-// ─── Image Cropper Component ───────────────────────────────────────────────
-function ImageCropper({
-  src,
-  onCrop,
-}: {
-  src: string;
-  onCrop: (blob: Blob) => void;
-}) {
+// ─── Types ────────────────────────────────────────────────────────────────
+type Employee = {
+  id: string; name: string; company: string; title: string;
+  phone: string; email: string; website: string; whatsapp: string;
+  telegram: string; instagram: string; facebook: string; linkedin: string;
+  tiktok: string; image: string; logo: string;
+};
+
+// ─── Image Cropper ─────────────────────────────────────────────────────────
+function ImageCropper({ src, onCrop }: { src: string; onCrop: (blob: Blob) => void }) {
   const [zoom, setZoom] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef({ mx: 0, my: 0, px: 0, py: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const SIZE = 220; // circle diameter in px
+  const SIZE = 200;
 
-  // Load image
   useEffect(() => {
     const img = new Image();
-    img.onload = () => { imgRef.current = img; renderPreview(); };
+    img.onload = () => { imgRef.current = img; draw(); };
     img.src = src;
   }, [src]);
 
-  const renderPreview = useCallback(() => {
-    const canvas = canvasRef.current;
-    const img = imgRef.current;
-    if (!canvas || !img) return;
-    const ctx = canvas.getContext('2d')!;
+  const draw = useCallback(() => {
+    const c = canvasRef.current; const i = imgRef.current;
+    if (!c || !i) return;
+    const ctx = c.getContext('2d')!;
     ctx.clearRect(0, 0, SIZE, SIZE);
-    // clip circle
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2, 0, Math.PI * 2);
-    ctx.clip();
-    const w = img.width * zoom;
-    const h = img.height * zoom;
-    const x = (SIZE - w) / 2 + pos.x;
-    const y = (SIZE - h) / 2 + pos.y;
-    ctx.drawImage(img, x, y, w, h);
+    ctx.beginPath(); ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2, 0, Math.PI * 2); ctx.clip();
+    const w = i.width * zoom, h = i.height * zoom;
+    ctx.drawImage(i, (SIZE - w) / 2 + pos.x, (SIZE - h) / 2 + pos.y, w, h);
     ctx.restore();
   }, [zoom, pos]);
 
-  useEffect(() => { renderPreview(); }, [zoom, pos, renderPreview]);
+  useEffect(() => { draw(); }, [draw]);
 
-  const onMouseDown = (e: React.MouseEvent) => {
-    setDragging(true);
-    dragStart.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y };
-  };
-  const onMouseMove = useCallback((e: MouseEvent) => {
-    if (!dragging) return;
-    setPos({
-      x: dragStart.current.px + (e.clientX - dragStart.current.mx),
-      y: dragStart.current.py + (e.clientY - dragStart.current.my),
-    });
-  }, [dragging]);
-  const onMouseUp = useCallback(() => setDragging(false), []);
-
-  // Touch support
-  const onTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    setDragging(true);
-    dragStart.current = { mx: t.clientX, my: t.clientY, px: pos.x, py: pos.y };
-  };
-  const onTouchMove = useCallback((e: TouchEvent) => {
-    if (!dragging) return;
-    const t = e.touches[0];
-    setPos({
-      x: dragStart.current.px + (t.clientX - dragStart.current.mx),
-      y: dragStart.current.py + (t.clientY - dragStart.current.my),
-    });
-  }, [dragging]);
+  const onMD = (e: React.MouseEvent) => { setDragging(true); dragStart.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y }; };
+  const onMM = useCallback((e: MouseEvent) => { if (!dragging) return; setPos({ x: dragStart.current.px + (e.clientX - dragStart.current.mx), y: dragStart.current.py + (e.clientY - dragStart.current.my) }); }, [dragging]);
+  const onMU = useCallback(() => setDragging(false), []);
+  const onTS = (e: React.TouchEvent) => { const t = e.touches[0]; setDragging(true); dragStart.current = { mx: t.clientX, my: t.clientY, px: pos.x, py: pos.y }; };
+  const onTM = useCallback((e: TouchEvent) => { if (!dragging) return; const t = e.touches[0]; setPos({ x: dragStart.current.px + (t.clientX - dragStart.current.mx), y: dragStart.current.py + (t.clientY - dragStart.current.my) }); }, [dragging]);
 
   useEffect(() => {
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    window.addEventListener('touchmove', onTouchMove);
-    window.addEventListener('touchend', onMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onMouseUp);
-    };
-  }, [onMouseMove, onMouseUp, onTouchMove]);
-
-  const exportCrop = () => {
-    const canvas = canvasRef.current!;
-    canvas.toBlob(b => { if (b) onCrop(b); }, 'image/jpeg', 0.92);
-  };
+    window.addEventListener('mousemove', onMM); window.addEventListener('mouseup', onMU);
+    window.addEventListener('touchmove', onTM); window.addEventListener('touchend', onMU);
+    return () => { window.removeEventListener('mousemove', onMM); window.removeEventListener('mouseup', onMU); window.removeEventListener('touchmove', onTM); window.removeEventListener('touchend', onMU); };
+  }, [onMM, onMU, onTM]);
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-      <p className="text-sm font-semibold text-gray-600 flex items-center gap-1">
-        <Move className="w-4 h-4"/> عکس را بکشید و اندازه آن را تنظیم کنید
-      </p>
-
-      {/* Canvas circle */}
-      <div
-        className="rounded-full overflow-hidden border-4 border-white shadow-xl"
-        style={{ width: SIZE, height: SIZE, cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none' }}
-        onMouseDown={onMouseDown}
-        onTouchStart={onTouchStart}
-      >
+    <div className="flex flex-col items-center gap-3 p-4 bg-gray-900 rounded-2xl">
+      <p className="text-xs text-gray-400 flex items-center gap-1"><Move className="w-3 h-3" /> بکشید و زوم کنید</p>
+      <div className="rounded-full overflow-hidden border-4 border-white/20 shadow-2xl" style={{ width: SIZE, height: SIZE, cursor: dragging ? 'grabbing' : 'grab' }} onMouseDown={onMD} onTouchStart={onTS}>
         <canvas ref={canvasRef} width={SIZE} height={SIZE} />
       </div>
-
-      {/* Zoom Slider */}
-      <div className="w-full flex items-center gap-3 px-2">
-        <button onClick={() => setZoom(z => Math.max(0.3, z - 0.1))} className="p-1.5 bg-white rounded-lg shadow border border-gray-200 hover:bg-gray-50">
-          <ZoomOut className="w-4 h-4 text-gray-600"/>
-        </button>
-        <input
-          type="range" min="0.3" max="4" step="0.05"
-          value={zoom}
-          onChange={e => setZoom(parseFloat(e.target.value))}
-          className="flex-1 accent-blue-600"
-        />
-        <button onClick={() => setZoom(z => Math.min(4, z + 0.1))} className="p-1.5 bg-white rounded-lg shadow border border-gray-200 hover:bg-gray-50">
-          <ZoomIn className="w-4 h-4 text-gray-600"/>
-        </button>
-        <span className="text-xs text-gray-500 w-10 text-center">{Math.round(zoom * 100)}%</span>
+      <div className="w-full flex items-center gap-2 px-1">
+        <button type="button" onClick={() => setZoom(z => Math.max(0.3, z - 0.1))} className="p-1.5 bg-gray-700 rounded-lg text-gray-300 hover:bg-gray-600"><ZoomOut className="w-3.5 h-3.5" /></button>
+        <input type="range" min="0.3" max="4" step="0.05" value={zoom} onChange={e => setZoom(parseFloat(e.target.value))} className="flex-1 accent-blue-500" />
+        <button type="button" onClick={() => setZoom(z => Math.min(4, z + 0.1))} className="p-1.5 bg-gray-700 rounded-lg text-gray-300 hover:bg-gray-600"><ZoomIn className="w-3.5 h-3.5" /></button>
+        <span className="text-xs text-gray-400 w-10 text-center">{Math.round(zoom * 100)}%</span>
       </div>
-
-      <button
-        type="button"
-        onClick={exportCrop}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg text-sm flex items-center justify-center gap-2"
-      >
-        ✅ تأیید و استفاده از این برش
-      </button>
+      <button type="button" onClick={() => canvasRef.current?.toBlob(b => { if (b) onCrop(b); }, 'image/jpeg', 0.92)} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-xl text-sm">✅ تأیید برش</button>
     </div>
   );
 }
 
-// ─── Card Preview Component ────────────────────────────────────────────────
-const cardStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap');
-  .pw{width:100%;max-width:330px;display:flex;flex-direction:column;gap:0}
-  .pc{border-radius:20px;overflow:hidden;box-shadow:0 6px 32px rgba(0,0,0,.18)}
-  .pt{background:linear-gradient(180deg,#00004d 0%,#0000aa 100%);height:170px;display:flex;justify-content:center;align-items:flex-start;padding-top:22px}
-  .pb{background:linear-gradient(175deg,#4a73f5 0%,#5b50f0 40%,#6644ee 100%);padding:78px 14px 20px;text-align:center;position:relative}
-  .pav{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;border:4px solid #fff;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}
-  .pav img{width:100%;height:100%;object-fit:cover}
-  .pco{font-size:15px;font-weight:900;color:#000;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;font-family:'Montserrat',Arial,sans-serif}
-  .pna{font-size:17px;font-weight:900;color:#000;text-transform:uppercase;letter-spacing:2px;margin-bottom:1px;font-family:'Montserrat',Arial,sans-serif}
-  .pti{font-size:12px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:1px;margin-bottom:15px;font-family:'Montserrat',Arial,sans-serif}
-  .psr{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;margin-bottom:13px}
-  .psb{width:36px;height:36px;border:1.5px solid #111;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#111;font-size:15px}
-  .pac{display:flex;flex-direction:column;gap:7px}
-  .pab{display:block;width:100%;background:linear-gradient(180deg,#e8e8e8 0%,#c8c8c8 100%);border:1px solid rgba(0,0,0,.1);color:#000;font-weight:900;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:8px 0;border-radius:9px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.12);font-family:'Montserrat',Arial,sans-serif}
-  .pe{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px}
-  .pef{width:100%;background:linear-gradient(180deg,#dedede 0%,#c5c5c5 100%);color:#000;font-weight:700;font-size:13px;padding:9px 0;border-radius:10px;text-align:center;font-family:'Montserrat',Arial,sans-serif}
-  .pen{width:170px;background:linear-gradient(180deg,#dedede 0%,#c5c5c5 100%);color:#000;font-weight:700;font-size:13px;padding:9px 0;border-radius:10px;text-align:center;font-family:'Montserrat',Arial,sans-serif}
-`;
+// ─── Card Preview ──────────────────────────────────────────────────────────
+function CardPreview({ data, imagePreview, logoPreview }: { data: Partial<Employee>; imagePreview: string; logoPreview: string; }) {
+  const s = { fontFamily: "'Montserrat', Arial, sans-serif" };
+  return (
+    <div style={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 6px 28px rgba(0,0,0,0.22)' }}>
+        {/* TOP */}
+        <div style={{ background: 'linear-gradient(180deg,#00004d 0%,#0000aa 100%)', height: 155, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: 20 }}>
+          {logoPreview ? <img src={logoPreview} style={{ height: 52, objectFit: 'contain' }} alt="" /> : <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 11, border: '1px dashed rgba(255,255,255,0.25)', borderRadius: 7, padding: '3px 10px' }}>LOGO</div>}
+        </div>
+        {/* BOTTOM */}
+        <div style={{ background: 'linear-gradient(175deg,#4a73f5 0%,#5b50f0 40%,#6644ee 100%)', padding: '66px 14px 18px', textAlign: 'center', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -52, left: '50%', transform: 'translateX(-50%)', width: 104, height: 104, borderRadius: '50%', border: '4px solid #fff', overflow: 'hidden', background: '#ddd', boxShadow: '0 3px 12px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {imagePreview ? <img src={imagePreview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <span style={{ fontSize: 10, color: '#999' }}>عکس</span>}
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: '#000', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 1, ...s }}>{data.company || 'COMPANY'}</div>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#000', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 1, ...s }}>{data.name || 'FULL NAME'}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#111', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 13, ...s }}>{data.title || 'JOB TITLE'}</div>
+          {/* Social */}
+          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 5, marginBottom: 12 }}>
+            {['whatsapp', 'telegram', 'email', 'instagram', 'facebook', 'linkedin', 'tiktok'].map(k => {
+              const val = (data as any)[k];
+              if (!val) return null;
+              const icon: Record<string, string> = { whatsapp: 'fa-whatsapp', telegram: 'fa-telegram-plane', email: 'fa-envelope', instagram: 'fa-instagram', facebook: 'fa-facebook-f', linkedin: 'fa-linkedin-in', tiktok: 'fa-tiktok' };
+              const prefix = k === 'email' ? 'far' : 'fab';
+              return <div key={k} style={{ width: 32, height: 32, border: '1.5px solid #111', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}><i className={`${prefix} ${icon[k]}`} /></div>;
+            })}
+          </div>
+          {/* Buttons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {[data.website && 'WEBSITE', 'ABOUT', 'PROFILE'].filter(Boolean).map(label => (
+              <div key={label} style={{ background: 'linear-gradient(180deg,#e8e8e8 0%,#c8c8c8 100%)', border: '1px solid rgba(0,0,0,0.1)', color: '#000', fontWeight: 900, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', padding: '7px 0', borderRadius: 8, textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', ...s }}>{label}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 10 }}>
+        <div style={{ width: '100%', background: 'linear-gradient(180deg,#dedede 0%,#c5c5c5 100%)', color: '#000', fontWeight: 700, fontSize: 12, padding: '8px 0', borderRadius: 10, textAlign: 'center', ...s }}>Add to Contact</div>
+        <div style={{ width: 150, background: 'linear-gradient(180deg,#dedede 0%,#c5c5c5 100%)', color: '#000', fontWeight: 700, fontSize: 12, padding: '8px 0', borderRadius: 10, textAlign: 'center', ...s }}>Products</div>
+      </div>
+    </div>
+  );
+}
 
-// ─── Main Admin Page ───────────────────────────────────────────────────────
+// ─── Empty form ────────────────────────────────────────────────────────────
+const emptyForm = (): Partial<Employee> => ({
+  id: '', name: '', company: '', title: '', phone: '', email: '',
+  website: '', whatsapp: '', telegram: '', instagram: '',
+  facebook: '', linkedin: '', tiktok: '', image: '', logo: ''
+});
+
+// ─── Main Page ─────────────────────────────────────────────────────────────
 export default function AdminPanel() {
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+  const [view, setView] = useState<'list' | 'form'>('list');
+  const [employees, setEmployees] = useState<Record<string, Employee>>({});
+  const [loadingList, setLoadingList] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState('');
+  const [err, setErr] = useState('');
   const [finalLink, setFinalLink] = useState('');
 
-  const [id, setId] = useState('');
-  const [name, setName] = useState('');
-  const [company, setCompany] = useState('');
-  const [title, setTitle] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [website, setWebsite] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
-  const [telegram, setTelegram] = useState('');
-  const [instagram, setInstagram] = useState('');
-  const [facebook, setFacebook] = useState('');
-  const [linkedin, setLinkedin] = useState('');
-  const [tiktok, setTiktok] = useState('');
+  const [form, setForm] = useState<Partial<Employee>>(emptyForm());
+  const [isEdit, setIsEdit] = useState(false);
 
-  // Image states
-  const [rawImageSrc, setRawImageSrc] = useState('');   // original uploaded
-  const [croppedImage, setCroppedImage] = useState(''); // after crop confirm
+  const [rawImg, setRawImg] = useState('');
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
+  const [croppedUrl, setCroppedUrl] = useState('');
   const [showCropper, setShowCropper] = useState(false);
-
-  const [logoPreview, setLogoPreview] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
 
   const formRef = useRef<HTMLFormElement>(null);
-  const logoInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Load employees
+  const loadEmployees = async () => {
+    setLoadingList(true);
+    try {
+      const r = await fetch('/api/employees', { cache: 'no-store' });
+      setEmployees(await r.json());
+    } catch { }
+    setLoadingList(false);
+  };
+
+  useEffect(() => { loadEmployees(); }, []);
+
+  const openNew = () => {
+    setForm(emptyForm()); setIsEdit(false);
+    setRawImg(''); setCroppedBlob(null); setCroppedUrl(''); setLogoUrl('');
+    setSaved(''); setErr(''); setFinalLink('');
+    setView('form');
+  };
+
+  const openEdit = (emp: Employee) => {
+    setForm(emp); setIsEdit(true);
+    setRawImg(''); setCroppedBlob(null);
+    setCroppedUrl(emp.image || ''); setLogoUrl(emp.logo || '');
+    setSaved(''); setErr(''); setFinalLink('');
+    setView('form');
+  };
+
+  const set = (k: keyof Employee) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const handleImgFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setRawImageSrc(reader.result as string);
-      setShowCropper(true);
-    };
+    reader.onloadend = () => { setRawImg(reader.result as string); setShowCropper(true); };
     reader.readAsDataURL(file);
   };
 
-  const handleCropConfirm = (blob: Blob) => {
-    setCroppedBlob(blob);
-    const url = URL.createObjectURL(blob);
-    setCroppedImage(url);
-    setShowCropper(false);
-  };
-
   const handleLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onloadend = () => setLogoPreview(reader.result as string);
+    reader.onloadend = () => setLogoUrl(reader.result as string);
     reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setSuccess(''); setError(''); setFinalLink('');
-
+    setSaving(true); setSaved(''); setErr(''); setFinalLink('');
     const fd = new FormData(formRef.current!);
-
-    // Replace image with cropped blob
-    if (croppedBlob) {
-      fd.delete('image');
-      fd.append('image', croppedBlob, `${id}_profile.jpg`);
-    }
-
+    if (croppedBlob) { fd.delete('image'); fd.append('image', croppedBlob, `${form.id}_profile.jpg`); }
     try {
-      const res = await fetch('/api/save', { method: 'POST', body: fd });
-      const result = await res.json();
-      if (res.ok) { setSuccess('ذخیره شد! گیت‌هاب آپدیت شد.'); setFinalLink(`${window.location.origin}/${id}`); }
-      else setError(result.error || 'خطا');
-    } catch { setError('خطای ارتباط با سرور'); }
-    finally { setLoading(false); }
+      const r = await fetch('/api/save', { method: 'POST', body: fd });
+      const res = await r.json();
+      if (r.ok) {
+        setSaved('کارت ذخیره شد و گیت‌هاب آپدیت شد!');
+        setFinalLink(`${window.location.origin}/${form.id}`);
+        await loadEmployees();
+      } else setErr(res.error || 'خطا در ذخیره');
+    } catch { setErr('خطای ارتباط'); }
+    setSaving(false);
   };
 
-  const inputCls = "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-sm";
-  const labelCls = "block text-sm font-semibold text-gray-700 mb-1";
+  const inp = "w-full bg-gray-800/60 border border-gray-700 text-gray-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-gray-600 transition";
+  const lbl = "block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide";
 
+  // ── LIST VIEW ──
+  if (view === 'list') return (
+    <div className="min-h-screen bg-gray-950 text-white" dir="rtl">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">پنل مدیریت کارت‌های NFC</h1>
+              <p className="text-gray-500 text-sm">{Object.keys(employees).length} کارت فعال</p>
+            </div>
+          </div>
+          <button onClick={openNew} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2.5 rounded-xl transition text-sm shadow-lg">
+            <Plus className="w-4 h-4" /> کارت جدید
+          </button>
+        </div>
+
+        {/* Cards Grid */}
+        {loadingList ? (
+          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-500 animate-spin" /></div>
+        ) : Object.keys(employees).length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🪪</div>
+            <p className="text-gray-500 mb-4">هنوز هیچ کارتی ساخته نشده</p>
+            <button onClick={openNew} className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-2.5 rounded-xl transition text-sm">اولین کارت را بسازید</button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.values(employees).map(emp => (
+              <div key={emp.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition group">
+                {/* Card mini preview */}
+                <div className="h-24 flex items-end justify-center relative" style={{ background: 'linear-gradient(180deg,#00004d 0%,#0000aa 100%)' }}>
+                  {emp.logo && <img src={emp.logo} className="h-10 object-contain mb-3" alt="" />}
+                  <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full border-3 border-gray-900 overflow-hidden bg-gray-700" style={{ border: '3px solid #111827' }}>
+                    {emp.image ? <img src={emp.image} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">?</div>}
+                  </div>
+                </div>
+                <div className="pt-9 pb-4 px-4 text-center">
+                  <p className="font-black text-sm text-white uppercase tracking-wide">{emp.name}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">{emp.title}</p>
+                  <p className="text-blue-500 text-xs mt-0.5">{emp.company}</p>
+                </div>
+                <div className="px-4 pb-4 flex gap-2">
+                  <button onClick={() => openEdit(emp)} className="flex-1 flex items-center justify-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-xl transition text-xs">
+                    <Pencil className="w-3.5 h-3.5" /> ویرایش
+                  </button>
+                  <a href={`/${emp.id}`} target="_blank" className="flex items-center justify-center gap-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 font-semibold py-2 px-3 rounded-xl transition text-xs">
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // ── FORM VIEW ──
   return (
-    <div className="min-h-screen bg-gray-100 py-6 px-4" dir="rtl">
-      <style dangerouslySetInnerHTML={{ __html: cardStyles }} />
-
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 items-start">
-
-        {/* ── FORM ── */}
-        <div className="flex-1 bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-l from-blue-700 to-blue-500 px-6 py-5">
-            <h1 className="text-2xl font-bold text-white text-center">🪪 پنل مدیریت کارت‌های NFC</h1>
-            <p className="text-blue-100 text-center mt-1 text-sm">وارد کنید — پیش‌نمایش ببینید — لینک بگیرید</p>
-          </div>
-
-          <form ref={formRef} onSubmit={handleSubmit} className="p-6 space-y-5">
-
-            {/* ID */}
-            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-              <label className={labelCls}>آیدی اختصاصی (بخشی از لینک) *</label>
-              <input required name="id" value={id} onChange={e => setId(e.target.value.trim())} placeholder="مثال: kamran" className={inputCls} dir="ltr" />
-              <p className="text-xs text-blue-500 mt-1">لینک نهایی: yoursite.vercel.app/{id || '...'}</p>
-            </div>
-
-            {/* Basic */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { label: 'نام و نام خانوادگی *', name: 'name', val: name, set: setName, ph: 'KAMRAN HASAN', req: true },
-                { label: 'نام شرکت', name: 'company', val: company, set: setCompany, ph: 'MOMTAZ CHEM CO.', req: false },
-                { label: 'عنوان شغلی', name: 'title', val: title, set: setTitle, ph: 'DIGITAL MANAGER', req: false },
-                { label: 'شماره تماس', name: 'phone', val: phone, set: setPhone, ph: '+989123456789', req: false },
-              ].map(f => (
-                <div key={f.name}>
-                  <label className={labelCls}>{f.label}</label>
-                  <input required={f.req} name={f.name} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} className={inputCls} />
-                </div>
-              ))}
-              <div className="sm:col-span-2">
-                <label className={labelCls}>ایمیل</label>
-                <input name="email" value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="email@example.com" className={inputCls} dir="ltr" />
-              </div>
-            </div>
-
-            {/* Social */}
-            <div className="border-t pt-4">
-              <h3 className="font-bold text-gray-700 mb-4">🔗 شبکه‌های اجتماعی</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { label: 'واتساپ (شماره)', name: 'whatsapp', val: whatsapp, set: setWhatsapp, ph: '989123456789' },
-                  { label: 'تلگرام', name: 'telegram', val: telegram, set: setTelegram, ph: 'https://t.me/username' },
-                  { label: 'اینستاگرام', name: 'instagram', val: instagram, set: setInstagram, ph: 'https://instagram.com/...' },
-                  { label: 'فیسبوک', name: 'facebook', val: facebook, set: setFacebook, ph: 'https://facebook.com/...' },
-                  { label: 'لینکدین', name: 'linkedin', val: linkedin, set: setLinkedin, ph: 'https://linkedin.com/in/...' },
-                  { label: 'تیک‌تاک', name: 'tiktok', val: tiktok, set: setTiktok, ph: 'https://tiktok.com/@...' },
-                  { label: 'وب‌سایت', name: 'website', val: website, set: setWebsite, ph: 'https://example.com' },
-                ].map(f => (
-                  <div key={f.name}>
-                    <label className={labelCls}>{f.label}</label>
-                    <input name={f.name} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} className={inputCls} dir="ltr" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Images */}
-            <div className="border-t pt-4">
-              <h3 className="font-bold text-gray-700 mb-4">🖼️ تصاویر</h3>
-              <div className="space-y-4">
-
-                {/* Profile image with cropper */}
-                <div>
-                  <label className={labelCls}>عکس پروفایل</label>
-                  <input name="image" type="file" accept="image/*" onChange={handleImageFile}
-                    className="w-full text-sm file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-lg p-1.5" />
-
-                  {/* Cropper */}
-                  {showCropper && rawImageSrc && (
-                    <div className="mt-3">
-                      <ImageCropper src={rawImageSrc} onCrop={handleCropConfirm} />
-                    </div>
-                  )}
-
-                  {/* Confirmed crop preview */}
-                  {croppedImage && !showCropper && (
-                    <div className="mt-3 flex items-center gap-3">
-                      <img src={croppedImage} className="w-16 h-16 rounded-full object-cover border-2 border-blue-400 shadow" />
-                      <div>
-                        <p className="text-xs text-green-600 font-semibold">✅ برش تأیید شد</p>
-                        <button type="button" onClick={() => setShowCropper(true)} className="text-xs text-blue-500 underline mt-0.5">ویرایش مجدد</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Logo */}
-                <div>
-                  <label className={labelCls}>لوگوی شرکت</label>
-                  <input ref={logoInputRef} name="logo" type="file" accept="image/*" onChange={handleLogoFile}
-                    className="w-full text-sm file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-lg p-1.5" />
-                  {logoPreview && <img src={logoPreview} className="mt-2 h-12 object-contain rounded border border-gray-200 p-1 bg-gray-50" />}
-                </div>
-              </div>
-            </div>
-
-            {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-200">{error}</div>}
-            {success && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-xl space-y-2">
-                <div className="flex items-center gap-2 text-green-700 font-bold text-sm">
-                  <CheckCircle2 className="w-5 h-5" /><span>{success}</span>
-                </div>
-                <p className="text-xs text-green-700">لینک NFC (۱ دقیقه دیگر زنده می‌شود):</p>
-                <a href={finalLink} target="_blank" className="font-mono text-sm bg-white p-2 rounded border border-green-300 block text-left text-blue-600 break-all" dir="ltr">{finalLink}</a>
-              </div>
-            )}
-
-            <button type="submit" disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl flex justify-center items-center gap-2 transition-all disabled:opacity-60 text-base shadow-lg">
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              {loading ? 'در حال ارسال به گیت‌هاب...' : 'ذخیره و ساخت لینک NFC'}
-            </button>
-          </form>
+    <div className="min-h-screen bg-gray-950 text-white" dir="rtl">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => setView('list')} className="flex items-center gap-1.5 text-gray-400 hover:text-white transition text-sm">
+            <ChevronLeft className="w-4 h-4" /> بازگشت
+          </button>
+          <div className="h-4 w-px bg-gray-700" />
+          <h1 className="text-lg font-bold">{isEdit ? `ویرایش: ${form.name}` : 'کارت جدید'}</h1>
+          {isEdit && <span className="bg-blue-600/20 text-blue-400 text-xs font-semibold px-2 py-0.5 rounded-lg">در حال ویرایش</span>}
         </div>
 
-        {/* ── LIVE PREVIEW ── */}
-        <div className="w-full lg:w-[390px] shrink-0">
-          <div className="sticky top-6 flex flex-col items-center">
-            <div className="flex items-center gap-2 mb-4 bg-white px-5 py-2 rounded-full shadow-sm">
-              <span className="text-base">📱</span>
-              <span className="text-base font-bold text-gray-700">پیش‌نمایش زنده</span>
-            </div>
-
-            {/* Phone frame */}
-            <div style={{
-              width: 360, height: 755,
-              border: '14px solid #111', borderRadius: 48,
-              overflow: 'hidden', background: '#f2f2f2',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-              overflowY: 'auto',
-            }}>
-              <div style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-                <div style={{ width: 110, height: 26, background: '#111', borderRadius: '0 0 18px 18px' }} />
+        <div className="flex flex-col xl:flex-row gap-6">
+          {/* FORM */}
+          <div className="flex-1 space-y-4">
+            <form ref={formRef} onSubmit={handleSubmit}>
+              {/* ID */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-4">
+                <h3 className="text-sm font-bold text-gray-300 mb-4 flex items-center gap-2">🔗 آیدی کارت</h3>
+                <div>
+                  <label className={lbl}>آیدی (بخشی از لینک) *</label>
+                  <input required name="id" value={form.id || ''} onChange={set('id')} disabled={isEdit} placeholder="مثال: kamran" className={`${inp} ${isEdit ? 'opacity-50 cursor-not-allowed' : ''}`} dir="ltr" />
+                  <p className="text-xs text-gray-600 mt-1.5">لینک: yoursite.vercel.app/{form.id || '...'}</p>
+                </div>
               </div>
 
-              <div style={{ padding: '14px 10px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div className="pw">
-                  <div className="pc">
-                    <div className="pt">
-                      {logoPreview
-                        ? <img src={logoPreview} style={{ height: 60, objectFit: 'contain' }} alt="logo" />
-                        : <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 12, border: '1px dashed rgba(255,255,255,0.3)', borderRadius: 8, padding: '4px 12px' }}>LOGO</div>}
+              {/* Info */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-4">
+                <h3 className="text-sm font-bold text-gray-300 mb-4">👤 اطلاعات شخصی</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {([
+                    ['name', 'نام و نام خانوادگی *', 'KAMRAN HASAN', true],
+                    ['company', 'نام شرکت', 'MOMTAZ CHEM CO.', false],
+                    ['title', 'عنوان شغلی', 'DIGITAL MANAGER', false],
+                    ['phone', 'شماره تماس', '+989123456789', false],
+                    ['email', 'ایمیل', 'email@example.com', false],
+                    ['website', 'وب‌سایت', 'https://example.com', false],
+                  ] as [keyof Employee, string, string, boolean][]).map(([k, l, p, r]) => (
+                    <div key={k} className={k === 'email' || k === 'website' ? 'sm:col-span-2' : ''}>
+                      <label className={lbl}>{l}</label>
+                      <input required={r} name={k} value={(form[k] as string) || ''} onChange={set(k)} placeholder={p} className={inp} dir={k === 'email' || k === 'website' ? 'ltr' : undefined} />
                     </div>
-                    <div className="pb">
-                      <div className="pav">
-                        {croppedImage
-                          ? <img src={croppedImage} alt="profile" />
-                          : <div style={{ width: '100%', height: '100%', background: '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#888' }}>عکس</div>}
-                      </div>
-                      <div className="pco">{company || 'COMPANY NAME'}</div>
-                      <div className="pna">{name || 'FULL NAME'}</div>
-                      <div className="pti">{title || 'JOB TITLE'}</div>
-                      <div className="psr">
-                        {whatsapp   && <div className="psb"><i className="fab fa-whatsapp" /></div>}
-                        {telegram   && <div className="psb"><i className="fab fa-telegram-plane" /></div>}
-                        {email      && <div className="psb"><i className="far fa-envelope" /></div>}
-                        {instagram  && <div className="psb"><i className="fab fa-instagram" /></div>}
-                        {facebook   && <div className="psb"><i className="fab fa-facebook-f" /></div>}
-                        {linkedin   && <div className="psb"><i className="fab fa-linkedin-in" /></div>}
-                        {tiktok     && <div className="psb"><i className="fab fa-tiktok" /></div>}
-                      </div>
-                      <div className="pac">
-                        {website && <div className="pab">WEBSITE</div>}
-                        <div className="pab">ABOUT</div>
-                        <div className="pab">PROFILE</div>
-                      </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Social */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-4">
+                <h3 className="text-sm font-bold text-gray-300 mb-4">🌐 شبکه‌های اجتماعی</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {([
+                    ['whatsapp', 'واتساپ (شماره)', '989123456789'],
+                    ['telegram', 'تلگرام', 'https://t.me/...'],
+                    ['instagram', 'اینستاگرام', 'https://instagram.com/...'],
+                    ['facebook', 'فیسبوک', 'https://facebook.com/...'],
+                    ['linkedin', 'لینکدین', 'https://linkedin.com/in/...'],
+                    ['tiktok', 'تیک‌تاک', 'https://tiktok.com/@...'],
+                  ] as [keyof Employee, string, string][]).map(([k, l, p]) => (
+                    <div key={k}>
+                      <label className={lbl}>{l}</label>
+                      <input name={k} value={(form[k] as string) || ''} onChange={set(k)} placeholder={p} className={inp} dir="ltr" />
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Images */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-4">
+                <h3 className="text-sm font-bold text-gray-300 mb-4">🖼️ تصاویر</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Profile */}
+                  <div>
+                    <label className={lbl}>عکس پروفایل</label>
+                    <input name="image" type="file" accept="image/*" onChange={handleImgFile}
+                      className="w-full text-sm file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-gray-200 file:font-medium hover:file:bg-gray-600 cursor-pointer border border-gray-700 rounded-xl p-1.5 text-gray-400 bg-gray-800/40" />
+                    {showCropper && rawImg && (
+                      <div className="mt-3">
+                        <ImageCropper src={rawImg} onCrop={blob => { setCroppedBlob(blob); setCroppedUrl(URL.createObjectURL(blob)); setShowCropper(false); }} />
+                      </div>
+                    )}
+                    {croppedUrl && !showCropper && (
+                      <div className="mt-3 flex items-center gap-3 p-3 bg-gray-800 rounded-xl">
+                        <img src={croppedUrl} className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-500" />
+                        <div>
+                          <p className="text-xs text-green-400 font-semibold">✅ برش تأیید شد</p>
+                          <button type="button" onClick={() => setShowCropper(true)} className="text-xs text-blue-400 underline mt-0.5">ویرایش</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="pe">
-                    <div className="pef">Add to Contact</div>
-                    <div className="pen">Products</div>
+                  {/* Logo */}
+                  <div>
+                    <label className={lbl}>لوگوی شرکت</label>
+                    <input name="logo" type="file" accept="image/*" onChange={handleLogoFile}
+                      className="w-full text-sm file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-gray-200 file:font-medium hover:file:bg-gray-600 cursor-pointer border border-gray-700 rounded-xl p-1.5 text-gray-400 bg-gray-800/40" />
+                    {logoUrl && <div className="mt-3 p-3 bg-gray-800 rounded-xl flex items-center justify-center"><img src={logoUrl} className="h-12 object-contain" /></div>}
                   </div>
                 </div>
               </div>
+
+              {err && <div className="p-3 bg-red-900/40 border border-red-800 text-red-300 rounded-xl text-sm">{err}</div>}
+              {saved && (
+                <div className="p-4 bg-green-900/30 border border-green-800 rounded-xl space-y-2">
+                  <div className="flex items-center gap-2 text-green-400 font-bold text-sm"><CheckCircle2 className="w-4 h-4" />{saved}</div>
+                  <p className="text-xs text-green-600">لینک کارت (۱ دقیقه دیگر آنلاین می‌شود):</p>
+                  <a href={finalLink} target="_blank" className="flex items-center gap-1.5 font-mono text-sm text-blue-400 underline" dir="ltr">{finalLink} <ExternalLink className="w-3 h-3" /></a>
+                </div>
+              )}
+
+              <button type="submit" disabled={saving}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl flex justify-center items-center gap-2 transition disabled:opacity-60 shadow-lg text-sm mt-2">
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                {saving ? 'در حال ارسال به گیت‌هاب...' : isEdit ? 'ذخیره تغییرات' : 'ساخت کارت و گرفتن لینک NFC'}
+              </button>
+            </form>
+          </div>
+
+          {/* PREVIEW */}
+          <div className="w-full xl:w-[360px] shrink-0">
+            <div className="sticky top-6">
+              <p className="text-center text-sm font-semibold text-gray-400 mb-4">📱 پیش‌نمایش زنده</p>
+              <div style={{ width: 340, height: 720, border: '12px solid #1a1a1a', borderRadius: 44, overflow: 'hidden', background: '#f2f2f2', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', overflowY: 'auto', margin: '0 auto' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+                  <div style={{ width: 100, height: 24, background: '#1a1a1a', borderRadius: '0 0 16px 16px' }} />
+                </div>
+                <div style={{ padding: '12px 8px 40px', display: 'flex', justifyContent: 'center' }}>
+                  <CardPreview
+                    data={form}
+                    imagePreview={croppedUrl}
+                    logoPreview={logoUrl}
+                  />
+                </div>
+              </div>
+              <p className="text-center text-xs text-gray-600 mt-3">تغییرات فوری اینجا نمایش داده می‌شوند</p>
             </div>
-            <p className="text-xs text-gray-400 mt-3 text-center">با پر کردن فرم، کارت اینجا آپدیت می‌شود</p>
           </div>
         </div>
-
       </div>
     </div>
   );
