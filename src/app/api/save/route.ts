@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const maxDuration = 60; // extend Vercel timeout to 60s
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -19,125 +21,155 @@ export async function POST(request: Request) {
 
     const branch = 'main';
 
-    // Helper to upload a file to GitHub
+    // Helper: get file SHA without throwing
+    const getSHA = async (path: string): Promise<string | undefined> => {
+      const res = await fetch(
+        `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/${path}`,
+        { headers: { Authorization: `Bearer ${githubToken}` } }
+      );
+      if (!res.ok) return undefined;
+      const data = await res.json();
+      return data.sha;
+    };
+
+    // Helper: upload file to GitHub (parallel SHA fetch + PUT)
     const uploadToGitHub = async (path: string, content: string, isBase64: boolean = false) => {
-      // 1. Get file SHA if it exists
-      const fileUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/${path}`;
-      let sha = undefined;
-      
-      try {
-        const getRes = await fetch(fileUrl, {
-          headers: { Authorization: `Bearer ${githubToken}` }
-        });
-        if (getRes.ok) {
-          const fileData = await getRes.json();
-          sha = fileData.sha;
+      const sha = await getSHA(path);
+      const putRes = await fetch(
+        `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/${path}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${githubToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Update ${path} for ${id}`,
+            content: isBase64 ? content : Buffer.from(content).toString('base64'),
+            sha,
+            branch,
+          }),
         }
-      } catch (e) {}
-
-      // 2. Put file
-      const putRes = await fetch(fileUrl, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: `Update ${path} for ${id}`,
-          content: isBase64 ? content : Buffer.from(content).toString('base64'),
-          sha,
-          branch
-        }),
-      });
-
+      );
       if (!putRes.ok) {
-        throw new Error(`Failed to upload ${path}`);
+        const errText = await putRes.text();
+        throw new Error(`GitHub upload failed for ${path}: ${putRes.status} - ${errText}`);
       }
     };
 
-    // 1. Get current data.json from GitHub
-    let currentData = {};
+    // 1. Get current data.json — and SHA — in one call
+    let currentData: Record<string, any> = {};
+    let dataJsonSHA: string | undefined;
     const dataUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/public/data.json`;
     try {
       const res = await fetch(dataUrl, { headers: { Authorization: `Bearer ${githubToken}` } });
       if (res.ok) {
         const fileData = await res.json();
-        const decoded = Buffer.from(fileData.content, 'base64').toString('utf-8');
-        currentData = JSON.parse(decoded);
+        dataJsonSHA = fileData.sha;
+        currentData = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf-8'));
       }
-    } catch (e) {
-      console.log('No existing data.json found, creating new one.');
+    } catch {
+      console.log('No existing data.json, creating new one.');
     }
 
-    // 2. Upload Image if present
-    const imageFile = formData.get('image') as File;
-    let imageUrl = (currentData as any)[id]?.image || '';
+    // 2. Upload image, logo, custom file IN PARALLEL
+    const existing = currentData[id] || {};
+
+    const imageFile = formData.get('image') as File | null;
+    const logoFile  = formData.get('logo')  as File | null;
+    const customFile= formData.get('customBtnFile') as File | null;
+
+    let imageUrl     = existing.image      || '';
+    let logoUrl      = existing.logo       || '';
+    let customFileUrl= existing.customFileUrl || '';
+
+    const uploads: Promise<void>[] = [];
+
     if (imageFile && imageFile.size > 0) {
-      const buffer = Buffer.from(await imageFile.arrayBuffer());
-      const ext = imageFile.name.split('.').pop() || 'jpg';
-      const filename = `${id}_profile.${ext}`;
-      const base64Content = buffer.toString('base64');
-      await uploadToGitHub(`public/assets/${filename}`, base64Content, true);
-      imageUrl = `/assets/${filename}`;
+      uploads.push((async () => {
+        const ext = imageFile.name.split('.').pop() || 'jpg';
+        const filename = `${id}_profile.${ext}`;
+        const b64 = Buffer.from(await imageFile.arrayBuffer()).toString('base64');
+        await uploadToGitHub(`public/assets/${filename}`, b64, true);
+        imageUrl = `/assets/${filename}`;
+      })());
     }
 
-    // 3. Upload Logo if present
-    const logoFile = formData.get('logo') as File;
-    let logoUrl = (currentData as any)[id]?.logo || '/assets/logo.png';
     if (logoFile && logoFile.size > 0) {
-      const buffer = Buffer.from(await logoFile.arrayBuffer());
-      const ext = logoFile.name.split('.').pop() || 'png';
-      const filename = `${id}_logo.${ext}`;
-      const base64Content = buffer.toString('base64');
-      await uploadToGitHub(`public/assets/${filename}`, base64Content, true);
-      logoUrl = `/assets/${filename}`;
+      uploads.push((async () => {
+        const ext = logoFile.name.split('.').pop() || 'png';
+        const filename = `${id}_logo.${ext}`;
+        const b64 = Buffer.from(await logoFile.arrayBuffer()).toString('base64');
+        await uploadToGitHub(`public/assets/${filename}`, b64, true);
+        logoUrl = `/assets/${filename}`;
+      })());
     }
 
-    // 4. Upload Custom File if present
-    const customFile = formData.get('customBtnFile') as File;
-    let customFileUrl = (currentData as any)[id]?.customFileUrl || '';
     if (customFile && customFile.size > 0) {
-      const buffer = Buffer.from(await customFile.arrayBuffer());
-      const ext = customFile.name.split('.').pop() || 'pdf';
-      const filename = `${id}_file.${ext}`;
-      const base64Content = buffer.toString('base64');
-      await uploadToGitHub(`public/assets/${filename}`, base64Content, true);
-      customFileUrl = `/assets/${filename}`;
+      uploads.push((async () => {
+        const ext = customFile.name.split('.').pop() || 'pdf';
+        const filename = `${id}_file.${ext}`;
+        const b64 = Buffer.from(await customFile.arrayBuffer()).toString('base64');
+        await uploadToGitHub(`public/assets/${filename}`, b64, true);
+        customFileUrl = `/assets/${filename}`;
+      })());
     }
 
-    // 5. Update JSON
-    (currentData as any)[id] = {
+    // Run all file uploads in parallel
+    await Promise.all(uploads);
+
+    // 3. Build new record
+    currentData[id] = {
       id,
-      name: formData.get('name') || '',
-      company: formData.get('company') || '',
-      title: formData.get('title') || '',
-      phone: formData.get('phone') || '',
-      email: formData.get('email') || '',
-      website: formData.get('website') || '',
-      whatsapp: formData.get('whatsapp') || '',
-      telegram: formData.get('telegram') || '',
-      instagram: formData.get('instagram') || '',
-      facebook: formData.get('facebook') || '',
-      linkedin: formData.get('linkedin') || '',
-      tiktok: formData.get('tiktok') || '',
-      productsUrl: formData.get('productsUrl') || '',
-      aboutUrl: formData.get('aboutUrl') || '',
-      customBtnLabel: formData.get('customBtnLabel') || 'PROFILE',
-      customBtnType: formData.get('customBtnType') || 'link',
-      customBtnLink: formData.get('customBtnLink') || '',
-      customBtnText: formData.get('customBtnText') || '',
-      customFileUrl: customFileUrl,
-      logoSize: formData.get('logoSize') || 52,
-      logoMarginTop: formData.get('logoMarginTop') || 20,
-      image: imageUrl,
-      logo: logoUrl,
+      name:          formData.get('name')          || '',
+      company:       formData.get('company')        || '',
+      title:         formData.get('title')          || '',
+      phone:         formData.get('phone')          || '',
+      email:         formData.get('email')          || '',
+      website:       formData.get('website')        || '',
+      whatsapp:      formData.get('whatsapp')       || '',
+      telegram:      formData.get('telegram')       || '',
+      instagram:     formData.get('instagram')      || '',
+      facebook:      formData.get('facebook')       || '',
+      linkedin:      formData.get('linkedin')       || '',
+      tiktok:        formData.get('tiktok')         || '',
+      productsUrl:   formData.get('productsUrl')    || '',
+      aboutUrl:      formData.get('aboutUrl')       || '',
+      customBtnLabel:formData.get('customBtnLabel') || 'PROFILE',
+      customBtnType: formData.get('customBtnType')  || 'link',
+      customBtnLink: formData.get('customBtnLink')  || '',
+      customBtnText: formData.get('customBtnText')  || '',
+      customFileUrl,
+      logoSize:      formData.get('logoSize')       || 72,
+      logoMarginTop: formData.get('logoMarginTop')  || 20,
+      image:         imageUrl,
+      logo:          logoUrl,
     };
 
-    await uploadToGitHub('public/data.json', JSON.stringify(currentData, null, 2), false);
+    // 4. Save data.json (reuse known SHA for speed — no extra GET needed)
+    const dataContent = Buffer.from(JSON.stringify(currentData, null, 2)).toString('base64');
+    const putData = await fetch(dataUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: `Update data.json for ${id}`,
+        content: dataContent,
+        sha: dataJsonSHA,
+        branch,
+      }),
+    });
+
+    if (!putData.ok) {
+      const errText = await putData.text();
+      throw new Error(`Failed to save data.json: ${putData.status} - ${errText}`);
+    }
 
     return NextResponse.json({ success: true, message: 'Card saved successfully!' });
-  } catch (error) {
-    console.error('Error saving data:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Save error:', error);
+    return NextResponse.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }

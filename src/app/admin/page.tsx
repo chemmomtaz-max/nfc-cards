@@ -207,13 +207,13 @@ export default function AdminPanel() {
     if (croppedBlob) { fd.delete('image'); fd.append('image', croppedBlob, `${form.id}_profile.jpg`); }
     try {
       const r = await fetch('/api/save', { method: 'POST', body: fd });
-      const res = await r.json();
+      const res = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
       if (r.ok) {
         setSaved('کارت ذخیره شد و گیت‌هاب آپدیت شد!');
         setFinalLink(`${window.location.origin}/${form.id}`);
         await loadEmployees();
       } else setErr(res.error || 'خطا در ذخیره');
-    } catch { setErr('خطای ارتباط'); }
+    } catch (e: any) { setErr('خطای ارتباط: ' + (e?.message || 'اتصال ناموفق')); }
     setSaving(false);
   };
 
