@@ -127,6 +127,7 @@ export async function POST(request: Request) {
       customBtnLink: formData.get('customBtnLink') || '',
       customBtnText: formData.get('customBtnText') || '',
       customFileUrl: customFileUrl,
+      logoSize: formData.get('logoSize') || 52,
       image: imageUrl,
       logo: logoUrl,
     };

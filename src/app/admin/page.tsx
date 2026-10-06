@@ -14,7 +14,7 @@ type Employee = {
   tiktok: string; image: string; logo: string;
   productsUrl?: string; aboutUrl?: string;
   customBtnLabel?: string; customBtnType?: string; customBtnLink?: string;
-  customBtnText?: string; customFileUrl?: string;
+  customBtnText?: string; customFileUrl?: string; logoSize?: number | string;
 };
 
 // ─── Image Cropper ─────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ function CardPreview({ data, imagePreview, logoPreview }: { data: Partial<Employ
       <div style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 6px 28px rgba(0,0,0,0.22)' }}>
         {/* TOP */}
         <div style={{ background: 'linear-gradient(180deg,#00004d 0%,#0000aa 100%)', height: 155, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: 20 }}>
-          {logoPreview ? <img src={logoPreview} style={{ height: 52, objectFit: 'contain' }} alt="" /> : <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 11, border: '1px dashed rgba(255,255,255,0.25)', borderRadius: 7, padding: '3px 10px' }}>LOGO</div>}
+          {logoPreview ? <img src={logoPreview} style={{ height: Number(data.logoSize) || 72, objectFit: 'contain' }} alt="" /> : <div style={{ height: 72, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 11, border: '1px dashed rgba(255,255,255,0.25)', borderRadius: 7, padding: '3px 10px' }}>LOGO</div>}
         </div>
         {/* BOTTOM */}
         <div style={{ background: 'linear-gradient(175deg,#4a73f5 0%,#5b50f0 40%,#6644ee 100%)', padding: '66px 14px 18px', textAlign: 'center', position: 'relative' }}>
@@ -124,7 +124,7 @@ function CardPreview({ data, imagePreview, logoPreview }: { data: Partial<Employ
 const emptyForm = (): Partial<Employee> => ({
   id: '', name: '', company: '', title: '', phone: '', email: '',
   website: '', whatsapp: '', telegram: '', instagram: '',
-  facebook: '', linkedin: '', tiktok: '', image: '', logo: '',
+  facebook: '', linkedin: '', tiktok: '', image: '', logo: '', logoSize: 72,
   productsUrl: '', aboutUrl: '', customBtnLabel: 'PROFILE', customBtnType: 'link', customBtnLink: '', customBtnText: ''
 });
 
@@ -434,8 +434,12 @@ export default function AdminPanel() {
                   <div>
                     <label className={lbl}>لوگوی شرکت</label>
                     <input name="logo" type="file" accept="image/*" onChange={handleLogoFile}
-                      className="w-full text-sm file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-gray-200 file:font-medium hover:file:bg-gray-600 cursor-pointer border border-gray-700 rounded-xl p-1.5 text-gray-400 bg-gray-800/40" />
-                    {logoUrl && <div className="mt-3 p-3 bg-gray-800 rounded-xl flex items-center justify-center"><img src={logoUrl} className="h-12 object-contain" /></div>}
+                      className="w-full text-sm file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-gray-200 file:font-medium hover:file:bg-gray-600 cursor-pointer border border-gray-700 rounded-xl p-1.5 text-gray-400 bg-gray-800/40 mb-3" />
+                    
+                    <label className={lbl}>اندازه لوگو ({form.logoSize || 72}px)</label>
+                    <input type="range" name="logoSize" min="30" max="150" value={form.logoSize || 72} onChange={(e) => setForm(f => ({ ...f, logoSize: e.target.value }))} className="w-full accent-blue-500 mb-3" />
+
+                    {logoUrl && <div className="mt-2 p-3 bg-gray-800 rounded-xl flex items-center justify-center"><img src={logoUrl} style={{ height: Number(form.logoSize) || 72, objectFit: 'contain' }} /></div>}
                   </div>
                 </div>
               </div>

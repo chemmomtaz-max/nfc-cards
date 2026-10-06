@@ -148,7 +148,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
             {/* TOP */}
             <div className="card-top">
               {user.logo
-                ? <img src={user.logo} alt="Logo" className="logo" />
+                ? <img src={user.logo} alt="Logo" style={{ height: Number(user.logoSize) || 72, objectFit: 'contain' }} />
                 : <div className="logo-placeholder">LOGO</div>}
             </div>
 
