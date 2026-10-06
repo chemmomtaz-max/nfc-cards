@@ -10,7 +10,18 @@
     "whatsapp": "989123456789",
     "telegram": "https://t.me/kamran",
     "instagram": "https://instagram.com/kamran",
+    "facebook": "",
     "linkedin": "https://linkedin.com/in/kamran",
+    "tiktok": "",
+    "productsUrl": "",
+    "aboutUrl": "",
+    "customBtnLabel": "PROFILE",
+    "customBtnType": "link",
+    "customBtnLink": "",
+    "customBtnText": "",
+    "customFileUrl": "",
+    "logoSize": "109",
+    "logoMarginTop": "2",
     "image": "/assets/kamran_profile.jpg",
     "logo": "/assets/kamran_logo.png"
   }
