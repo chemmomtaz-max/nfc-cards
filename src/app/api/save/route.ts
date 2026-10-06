@@ -128,6 +128,7 @@ export async function POST(request: Request) {
       customBtnText: formData.get('customBtnText') || '',
       customFileUrl: customFileUrl,
       logoSize: formData.get('logoSize') || 52,
+      logoMarginTop: formData.get('logoMarginTop') || 20,
       image: imageUrl,
       logo: logoUrl,
     };
