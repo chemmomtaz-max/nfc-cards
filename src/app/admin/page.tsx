@@ -185,6 +185,40 @@ export default function AdminPanel() {
   const set = (k: keyof Employee) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }));
 
+  // Helper to resize/compress images in browser
+  const compressImage = (file: File, maxWidth = 800, maxHeight = 800, quality = 0.8): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => resolve(blob || file),
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+    });
+  };
+
   const handleImgFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
@@ -204,7 +238,28 @@ export default function AdminPanel() {
     setSaving(true); setSaved(''); setErr(''); setFinalLink('');
     const fd = new FormData(formRef.current!);
     if (isEdit) fd.set('id', form.id as string);
-    if (croppedBlob) { fd.delete('image'); fd.append('image', croppedBlob, `${form.id}_profile.jpg`); }
+
+    // Compress cropped image or uploaded raw image
+    if (croppedBlob) {
+      fd.delete('image');
+      fd.append('image', croppedBlob, `${form.id}_profile.jpg`);
+    } else {
+      const imgFile = fd.get('image') as File;
+      if (imgFile && imgFile.size > 0) {
+        const compressed = await compressImage(imgFile, 600, 600, 0.85);
+        fd.delete('image');
+        fd.append('image', compressed, `${form.id}_profile.jpg`);
+      }
+    }
+
+    // Compress Logo file if selected
+    const logoFile = fd.get('logo') as File;
+    if (logoFile && logoFile.size > 0) {
+      const compressedLogo = await compressImage(logoFile, 500, 500, 0.85);
+      fd.delete('logo');
+      fd.append('logo', compressedLogo, `${form.id}_logo.jpg`);
+    }
+
     try {
       const r = await fetch('/api/save', { method: 'POST', body: fd });
       const res = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
@@ -212,7 +267,13 @@ export default function AdminPanel() {
         setSaved('کارت ذخیره شد و گیت‌هاب آپدیت شد!');
         setFinalLink(`${window.location.origin}/${form.id}`);
         await loadEmployees();
-      } else setErr(res.error || 'خطا در ذخیره');
+      } else {
+        if (r.status === 413) {
+          setErr('حجم فایل انتخابی بیش از حد مجاز است. لطفاً فایل کم‌حجم‌تری انتخاب کنید.');
+        } else {
+          setErr(res.error || 'خطا در ذخیره');
+        }
+      }
     } catch (e: any) { setErr('خطای ارتباط: ' + (e?.message || 'اتصال ناموفق')); }
     setSaving(false);
   };
