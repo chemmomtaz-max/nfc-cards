@@ -178,63 +178,64 @@ export default function AdminPanel() {
         </div>
 
         {/* Live Preview Section */}
-        <div className="w-full lg:w-[400px] flex flex-col items-center">
-          <div className="sticky top-6 flex flex-col items-center">
+        <div className="w-full lg:w-[420px] flex flex-col items-center">
+          <div className="sticky top-6 flex flex-col items-center w-full">
             <h2 className="text-lg font-bold text-gray-700 mb-4 bg-white px-4 py-2 rounded-full shadow-sm">نمایش زنده در موبایل</h2>
             
             {/* Phone Mockup Frame */}
-            <div className="w-[340px] h-[720px] bg-gray-100 border-[12px] border-black rounded-[45px] overflow-y-auto relative shadow-2xl pb-4 font-sans no-scrollbar">
+            <div className="w-[380px] h-[780px] bg-white border-[14px] border-black rounded-[45px] overflow-y-auto relative shadow-2xl pb-6 font-sans no-scrollbar">
               
-              {/* Dynamic Card Preview */}
-              <div className="w-full flex flex-col gap-4 p-3 mt-4">
-                
-                <div className="bg-white rounded-[24px] overflow-hidden shadow-lg relative">
+              <div className="w-full flex flex-col items-center pt-8 pb-12 px-3">
+                <div className="w-full flex flex-col">
                   
-                  <div className="bg-gradient-to-b from-[#000033] to-[#000080] h-[170px] flex justify-center items-start pt-5">
-                    {logoPreview ? (
-                      <img src={logoPreview} alt="Logo" className="h-[60px] object-contain" />
-                    ) : (
-                      <div className="text-white/50 text-sm border border-dashed border-white/30 p-2 rounded">بدون لوگو</div>
-                    )}
-                  </div>
-                  
-                  <div className="bg-gradient-to-b from-[#4f8aff] to-[#5d5cff] pt-[75px] pb-6 px-4 text-center relative rounded-b-[24px]">
-                    
-                    <div className="absolute -top-[55px] left-1/2 -translate-x-1/2 w-[110px] h-[110px] rounded-full border-[4px] border-white overflow-hidden bg-white shadow-md flex items-center justify-center">
-                      {imagePreview ? (
-                        <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
+                  {/* Main Card */}
+                  <div className="w-full rounded-[20px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                    <div className="bg-[#000066] h-[220px] flex justify-center items-start pt-10">
+                      {logoPreview ? (
+                        <img src={logoPreview} alt="Logo" className="h-[75px] object-contain" />
                       ) : (
-                        <div className="text-gray-400 text-xs text-center px-2">بدون<br/>عکس</div>
+                        <div className="text-white/50 text-sm border border-dashed border-white/30 p-2 rounded">بدون لوگو</div>
                       )}
                     </div>
+                    
+                    <div className="bg-gradient-to-b from-[#4a6bf6] to-[#6a5ced] pt-[95px] pb-6 px-6 text-center relative">
+                      <div className="absolute -top-[75px] left-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full border-[5px] border-white overflow-hidden bg-white flex items-center justify-center shadow-sm">
+                        {imagePreview ? (
+                          <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-gray-400 text-xs text-center px-2">بدون عکس</div>
+                        )}
+                      </div>
 
-                    <h2 className="text-[15px] font-black text-black uppercase mb-1" dir="ltr">{company || 'COMPANY NAME'}</h2>
-                    <h1 className="text-xl font-black text-black uppercase tracking-wide mb-1" dir="ltr">{name || 'USER NAME'}</h1>
-                    <h3 className="text-sm font-bold text-gray-800 uppercase mb-5" dir="ltr">{title || 'JOB TITLE'}</h3>
+                      <h2 className="text-[20px] font-black text-black uppercase mb-0 tracking-tight" dir="ltr" style={{ fontFamily: 'Arial Black, Impact, sans-serif' }}>{company || 'COMPANY NAME'}</h2>
+                      <h1 className="text-[22px] font-black text-black uppercase tracking-[0.1em] mb-1" dir="ltr" style={{ fontFamily: 'Arial Black, Impact, sans-serif' }}>{name || 'USER NAME'}</h1>
+                      <h3 className="text-[16px] font-semibold text-black uppercase mb-6" dir="ltr">{title || 'JOB TITLE'}</h3>
 
-                    <div className="flex justify-center flex-wrap gap-2 mb-5">
-                      {whatsapp && <div className="w-9 h-9 rounded-xl border-[1.5px] border-black text-black flex items-center justify-center"><i className="fab fa-whatsapp"></i></div>}
-                      {telegram && <div className="w-9 h-9 rounded-xl border-[1.5px] border-black text-black flex items-center justify-center"><i className="fab fa-telegram-plane"></i></div>}
-                      {email && <div className="w-9 h-9 rounded-xl border-[1.5px] border-black text-black flex items-center justify-center"><i className="far fa-envelope"></i></div>}
-                      {instagram && <div className="w-9 h-9 rounded-xl border-[1.5px] border-black text-black flex items-center justify-center"><i className="fab fa-instagram"></i></div>}
-                      {linkedin && <div className="w-9 h-9 rounded-xl border-[1.5px] border-black text-black flex items-center justify-center"><i className="fab fa-linkedin-in"></i></div>}
+                      <div className="flex justify-center flex-wrap gap-2 mb-6">
+                        {whatsapp && <div className="w-[42px] h-[42px] rounded-xl border border-black text-black flex items-center justify-center text-[22px]"><i className="fab fa-whatsapp"></i></div>}
+                        {telegram && <div className="w-[42px] h-[42px] rounded-xl border border-black text-black flex items-center justify-center text-[22px]"><i className="fab fa-telegram-plane"></i></div>}
+                        {email && <div className="w-[42px] h-[42px] rounded-xl border border-black text-black flex items-center justify-center text-[22px]"><i className="far fa-envelope"></i></div>}
+                        {instagram && <div className="w-[42px] h-[42px] rounded-xl border border-black text-black flex items-center justify-center text-[22px]"><i className="fab fa-instagram"></i></div>}
+                        <div className="w-[42px] h-[42px] rounded-xl border border-black text-black flex items-center justify-center text-[22px]"><i className="fab fa-facebook-f"></i></div>
+                        <div className="w-[42px] h-[42px] rounded-xl border border-black text-black flex items-center justify-center text-[22px]"><i className="fab fa-linkedin-in"></i></div>
+                        <div className="w-[42px] h-[42px] rounded-xl border border-black text-black flex items-center justify-center text-[22px]"><i className="fab fa-tiktok"></i></div>
+                      </div>
+
+                      <div className="flex flex-col gap-3 px-1">
+                        {website && <div className="w-full bg-gradient-to-b from-[#f6f6f6] to-[#cfcfcf] text-black font-black uppercase py-[10px] rounded-[10px] shadow-sm text-[18px]" style={{ fontFamily: 'Arial Black, Impact, sans-serif' }}>WEBSITE</div>}
+                        <div className="w-full bg-gradient-to-b from-[#f6f6f6] to-[#cfcfcf] text-black font-black uppercase py-[10px] rounded-[10px] shadow-sm text-[18px]" style={{ fontFamily: 'Arial Black, Impact, sans-serif' }}>ABOUT</div>
+                        <div className="w-full bg-gradient-to-b from-[#f6f6f6] to-[#cfcfcf] text-black font-black uppercase py-[10px] rounded-[10px] shadow-sm text-[18px]" style={{ fontFamily: 'Arial Black, Impact, sans-serif' }}>PROFILE</div>
+                      </div>
                     </div>
-
-                    <div className="flex flex-col gap-2">
-                      {website && <div className="w-full bg-[#e5e7eb] text-black font-black uppercase py-2.5 rounded-xl text-sm">WEBSITE</div>}
-                      <div className="w-full bg-[#e5e7eb] text-black font-black uppercase py-2.5 rounded-xl text-sm">ABOUT</div>
-                      <div className="w-full bg-[#e5e7eb] text-black font-black uppercase py-2.5 rounded-xl text-sm">PROFILE</div>
-                    </div>
-
                   </div>
-                </div>
 
-                <div className="flex flex-col gap-2 px-1">
-                  <div className="w-full bg-[#e5e7eb] text-black font-black py-2.5 rounded-xl text-center uppercase text-sm">
-                    Add to Contact
+                  {/* External Buttons */}
+                  <div className="mt-6 flex flex-col items-center gap-3 w-full px-2">
+                    <div className="w-full bg-[#e3e3e3] text-black font-black py-2.5 rounded-xl text-center shadow-sm text-[17px]">Add to Contact</div>
+                    <div className="w-[220px] bg-[#e3e3e3] text-black font-black py-2.5 rounded-xl text-center shadow-sm text-[17px]">Products</div>
                   </div>
-                </div>
 
+                </div>
               </div>
 
             </div>
