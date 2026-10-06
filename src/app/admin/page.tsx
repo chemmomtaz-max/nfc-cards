@@ -106,7 +106,11 @@ function CardPreview({ data, imagePreview, logoPreview }: { data: Partial<Employ
           </div>
           {/* Buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {[data.website && 'WEBSITE', 'ABOUT', data.customBtnLabel || 'PROFILE'].filter(Boolean).map(label => (
+            {[
+              data.website && 'WEBSITE', 
+              (data.aboutUrl || data.website) && 'ABOUT', 
+              data.customBtnLabel || 'PROFILE'
+            ].filter(Boolean).map(label => (
               <div key={label} style={{ background: 'linear-gradient(180deg,#e8e8e8 0%,#c8c8c8 100%)', border: '1px solid rgba(0,0,0,0.1)', color: '#000', fontWeight: 900, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', padding: '7px 0', borderRadius: 8, textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', ...s }}>{label}</div>
             ))}
           </div>
@@ -114,7 +118,9 @@ function CardPreview({ data, imagePreview, logoPreview }: { data: Partial<Employ
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 10 }}>
         <div style={{ width: '100%', background: 'linear-gradient(180deg,#dedede 0%,#c5c5c5 100%)', color: '#000', fontWeight: 700, fontSize: 12, padding: '8px 0', borderRadius: 10, textAlign: 'center', ...s }}>Add to Contact</div>
-        <div style={{ width: 150, background: 'linear-gradient(180deg,#dedede 0%,#c5c5c5 100%)', color: '#000', fontWeight: 700, fontSize: 12, padding: '8px 0', borderRadius: 10, textAlign: 'center', ...s }}>Products</div>
+        {(data.productsUrl || data.website) && (
+          <div style={{ width: 150, background: 'linear-gradient(180deg,#dedede 0%,#c5c5c5 100%)', color: '#000', fontWeight: 700, fontSize: 12, padding: '8px 0', borderRadius: 10, textAlign: 'center', ...s }}>Products</div>
+        )}
       </div>
     </div>
   );

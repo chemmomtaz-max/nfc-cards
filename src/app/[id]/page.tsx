@@ -179,7 +179,12 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
               {/* Action Buttons */}
               <div className="action-btns">
                 {user.website && <a className="action-btn" href={user.website} target="_blank">WEBSITE</a>}
-                {user.aboutUrl && <a className="action-btn" href={user.aboutUrl} target="_blank">ABOUT</a>}
+                
+                {/* About button falls back to website/about if empty */}
+                {(user.aboutUrl || user.website) && (
+                  <a className="action-btn" href={user.aboutUrl || `${user.website.replace(/\/$/, '')}/about`} target="_blank">ABOUT</a>
+                )}
+                
                 {user.customBtnLabel && (
                   <a 
                     className="action-btn" 
@@ -200,7 +205,11 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
               href={`data:text/vcard;charset=utf-8,${encodeURIComponent(vcardData)}`}
               download={`${user.name.replace(/\s+/g,'_')}.vcf`}
             >Add to Contact</a>
-            {user.productsUrl && <a className="ext-btn-narrow" href={user.productsUrl} target="_blank">Products</a>}
+            
+            {/* Products button falls back to website/shop if empty */}
+            {(user.productsUrl || user.website) && (
+              <a className="ext-btn-narrow" href={user.productsUrl || `${user.website.replace(/\/$/, '')}/shop`} target="_blank">Products</a>
+            )}
           </div>
 
         </div>
