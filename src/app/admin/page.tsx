@@ -265,7 +265,7 @@ export default function AdminPanel() {
       const res = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
       if (r.ok) {
         setSaved('کارت ذخیره شد و گیت‌هاب آپدیت شد!');
-        setFinalLink(`${window.location.origin}/${form.id}`);
+        setFinalLink(`https://nfc-cards-mc-serch.vercel.app/${form.id}`);
         await loadEmployees();
       } else {
         if (r.status === 413) {
