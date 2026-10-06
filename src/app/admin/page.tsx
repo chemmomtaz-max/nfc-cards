@@ -193,6 +193,7 @@ export default function AdminPanel() {
     e.preventDefault();
     setSaving(true); setSaved(''); setErr(''); setFinalLink('');
     const fd = new FormData(formRef.current!);
+    if (isEdit) fd.set('id', form.id as string);
     if (croppedBlob) { fd.delete('image'); fd.append('image', croppedBlob, `${form.id}_profile.jpg`); }
     try {
       const r = await fetch('/api/save', { method: 'POST', body: fd });
@@ -205,6 +206,7 @@ export default function AdminPanel() {
     } catch { setErr('خطای ارتباط'); }
     setSaving(false);
   };
+
 
   const inp = "w-full bg-gray-800/60 border border-gray-700 text-gray-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-gray-600 transition";
   const lbl = "block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide";
