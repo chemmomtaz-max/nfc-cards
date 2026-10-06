@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Save, Loader2, CheckCircle2, Phone, Mail, Globe, MessageCircle, Instagram, Linkedin } from 'lucide-react';
+import { Save, Loader2, CheckCircle2, Phone, Mail, Globe, MessageCircle } from 'lucide-react';
 
 export default function AdminPanel() {
   const [loading, setLoading] = useState(false);
