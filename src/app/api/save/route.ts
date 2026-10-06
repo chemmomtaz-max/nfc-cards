@@ -93,7 +93,19 @@ export async function POST(request: Request) {
       logoUrl = `/assets/${filename}`;
     }
 
-    // 4. Update JSON
+    // 4. Upload Custom File if present
+    const customFile = formData.get('customBtnFile') as File;
+    let customFileUrl = (currentData as any)[id]?.customFileUrl || '';
+    if (customFile && customFile.size > 0) {
+      const buffer = Buffer.from(await customFile.arrayBuffer());
+      const ext = customFile.name.split('.').pop() || 'pdf';
+      const filename = `${id}_file.${ext}`;
+      const base64Content = buffer.toString('base64');
+      await uploadToGitHub(`public/assets/${filename}`, base64Content, true);
+      customFileUrl = `/assets/${filename}`;
+    }
+
+    // 5. Update JSON
     (currentData as any)[id] = {
       id,
       name: formData.get('name') || '',
@@ -105,7 +117,16 @@ export async function POST(request: Request) {
       whatsapp: formData.get('whatsapp') || '',
       telegram: formData.get('telegram') || '',
       instagram: formData.get('instagram') || '',
+      facebook: formData.get('facebook') || '',
       linkedin: formData.get('linkedin') || '',
+      tiktok: formData.get('tiktok') || '',
+      productsUrl: formData.get('productsUrl') || '',
+      aboutUrl: formData.get('aboutUrl') || '',
+      customBtnLabel: formData.get('customBtnLabel') || 'PROFILE',
+      customBtnType: formData.get('customBtnType') || 'link',
+      customBtnLink: formData.get('customBtnLink') || '',
+      customBtnText: formData.get('customBtnText') || '',
+      customFileUrl: customFileUrl,
       image: imageUrl,
       logo: logoUrl,
     };

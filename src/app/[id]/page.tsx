@@ -179,8 +179,16 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
               {/* Action Buttons */}
               <div className="action-btns">
                 {user.website && <a className="action-btn" href={user.website} target="_blank">WEBSITE</a>}
-                <a className="action-btn" href={user.about||'#'} target="_blank">ABOUT</a>
-                <a className="action-btn" href={user.profile||'#'} target="_blank">PROFILE</a>
+                {user.aboutUrl && <a className="action-btn" href={user.aboutUrl} target="_blank">ABOUT</a>}
+                {user.customBtnLabel && (
+                  <a 
+                    className="action-btn" 
+                    href={user.customBtnType === 'text' ? `data:text/plain;charset=utf-8,${encodeURIComponent(user.customBtnText||'')}` : user.customBtnType === 'file' ? (user.customFileUrl||'#') : (user.customBtnLink||'#')} 
+                    target="_blank"
+                  >
+                    {user.customBtnLabel}
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -192,7 +200,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
               href={`data:text/vcard;charset=utf-8,${encodeURIComponent(vcardData)}`}
               download={`${user.name.replace(/\s+/g,'_')}.vcf`}
             >Add to Contact</a>
-            {user.products && <a className="ext-btn-narrow" href={user.products} target="_blank">Products</a>}
+            {user.productsUrl && <a className="ext-btn-narrow" href={user.productsUrl} target="_blank">Products</a>}
           </div>
 
         </div>

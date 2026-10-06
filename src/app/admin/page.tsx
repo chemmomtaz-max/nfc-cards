@@ -12,6 +12,9 @@ type Employee = {
   phone: string; email: string; website: string; whatsapp: string;
   telegram: string; instagram: string; facebook: string; linkedin: string;
   tiktok: string; image: string; logo: string;
+  productsUrl?: string; aboutUrl?: string;
+  customBtnLabel?: string; customBtnType?: string; customBtnLink?: string;
+  customBtnText?: string; customFileUrl?: string;
 };
 
 // ─── Image Cropper ─────────────────────────────────────────────────────────
@@ -103,7 +106,7 @@ function CardPreview({ data, imagePreview, logoPreview }: { data: Partial<Employ
           </div>
           {/* Buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {[data.website && 'WEBSITE', 'ABOUT', 'PROFILE'].filter(Boolean).map(label => (
+            {[data.website && 'WEBSITE', 'ABOUT', data.customBtnLabel || 'PROFILE'].filter(Boolean).map(label => (
               <div key={label} style={{ background: 'linear-gradient(180deg,#e8e8e8 0%,#c8c8c8 100%)', border: '1px solid rgba(0,0,0,0.1)', color: '#000', fontWeight: 900, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', padding: '7px 0', borderRadius: 8, textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', ...s }}>{label}</div>
             ))}
           </div>
@@ -121,7 +124,8 @@ function CardPreview({ data, imagePreview, logoPreview }: { data: Partial<Employ
 const emptyForm = (): Partial<Employee> => ({
   id: '', name: '', company: '', title: '', phone: '', email: '',
   website: '', whatsapp: '', telegram: '', instagram: '',
-  facebook: '', linkedin: '', tiktok: '', image: '', logo: ''
+  facebook: '', linkedin: '', tiktok: '', image: '', logo: '',
+  productsUrl: '', aboutUrl: '', customBtnLabel: 'PROFILE', customBtnType: 'link', customBtnLink: '', customBtnText: ''
 });
 
 // ─── Main Page ─────────────────────────────────────────────────────────────
@@ -337,6 +341,68 @@ export default function AdminPanel() {
                       <input name={k} value={(form[k] as string) || ''} onChange={set(k)} placeholder={p} className={inp} dir="ltr" />
                     </div>
                   ))}
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-4">
+                <h3 className="text-sm font-bold text-gray-300 mb-4">🔘 دکمه‌های اکشن</h3>
+                
+                <div className="space-y-4">
+                  {/* Products & About */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={lbl}>لینک دکمه PRODUCTS</label>
+                      <input name="productsUrl" value={form.productsUrl || ''} onChange={set('productsUrl')} placeholder="https://..." className={inp} dir="ltr" />
+                    </div>
+                    <div>
+                      <label className={lbl}>لینک دکمه ABOUT</label>
+                      <input name="aboutUrl" value={form.aboutUrl || ''} onChange={set('aboutUrl')} placeholder="https://..." className={inp} dir="ltr" />
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-800" />
+                  
+                  {/* Custom Button */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-300 mb-3">شخصی‌سازی دکمه سوم (پیش‌فرض PROFILE)</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className={lbl}>نام دکمه</label>
+                        <input name="customBtnLabel" value={form.customBtnLabel || ''} onChange={set('customBtnLabel')} placeholder="مثال: SHOP یا CATALOG" className={inp} dir="ltr" />
+                      </div>
+                      <div>
+                        <label className={lbl}>نوع دکمه</label>
+                        <select name="customBtnType" value={form.customBtnType || 'link'} onChange={(e) => setForm(f => ({ ...f, customBtnType: e.target.value }))} className={inp}>
+                          <option value="link">لینک سایت</option>
+                          <option value="file">دانلود فایل (PDF و...)</option>
+                          <option value="text">نمایش متن</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      {(!form.customBtnType || form.customBtnType === 'link') && (
+                        <div>
+                          <label className={lbl}>لینک</label>
+                          <input name="customBtnLink" value={form.customBtnLink || ''} onChange={set('customBtnLink')} placeholder="https://..." className={inp} dir="ltr" />
+                        </div>
+                      )}
+                      {form.customBtnType === 'file' && (
+                        <div>
+                          <label className={lbl}>فایل (آپلود)</label>
+                          <input name="customBtnFile" type="file" className="w-full text-sm file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-gray-200 file:font-medium hover:file:bg-gray-600 cursor-pointer border border-gray-700 rounded-xl p-1.5 text-gray-400 bg-gray-800/40" />
+                          {form.customFileUrl && <p className="text-xs text-green-400 mt-2">فایل قبلاً آپلود شده است. برای تغییر فایل جدید انتخاب کنید.</p>}
+                        </div>
+                      )}
+                      {form.customBtnType === 'text' && (
+                        <div>
+                          <label className={lbl}>متن نمایشی</label>
+                          <textarea name="customBtnText" value={form.customBtnText || ''} onChange={(e) => setForm(f => ({ ...f, customBtnText: e.target.value }))} rows={3} placeholder="متن خود را وارد کنید..." className={inp}></textarea>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
