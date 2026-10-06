@@ -4,15 +4,19 @@
     "name": "KAMRAN HASAN",
     "company": "MOMTAZ CHEM CO.",
     "title": "DIGITAL MANAGER",
-    "image": "/assets/profile.jpg",
+    "image": "/assets/kamran_profile.jpg",
     "logo": "/assets/logo.png",
     "phone": "+989123456789",
-    "email": "kamran@example.com",
-    "whatsapp": "+989123456789",
+    "email": "kamran@momtazchem.com",
+    "whatsapp": "989123456789",
     "telegram": "https://t.me/kamran",
     "instagram": "https://instagram.com/kamran",
     "facebook": "https://facebook.com/kamran",
     "linkedin": "https://linkedin.com/in/kamran",
-    "website": "https://example.com"
+    "tiktok": "https://tiktok.com/@kamran",
+    "website": "https://momtazchem.com",
+    "about": "https://momtazchem.com/about",
+    "profile": "https://momtazchem.com/profile",
+    "products": "https://momtazchem.com/products"
   }
 }
